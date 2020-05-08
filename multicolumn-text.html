@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+        </style>
+    </head>
+    <body>
+        before multi-column - not selected
+        <div style="column-count: 2;">
+            <div>this is not area selected this is not area selected this is not area selected this is not area selected this is not area selected
+                 this is not area selected this is not area selected this is not area selected this is not area selected this is not area selected</div>
+            <div style="font-weight: bold;">this is area selected text this is area selected text this is area selected text this is area selected text
+                 this is area selected text this is area selected text this is area selected text this is area selected text
+                 this is area selected text this is area selected text this is area selected text this is area selected text
+                 this is area selected text this is area selected text this is area selected text this is area selected text
+                 this is area selected text this is area selected text this is area selected text this is area selected text
+                 this is area selected text this is area selected text this is area selected text this is area selected text
+                 this is area selected text this is area selected text this is area selected text this is area selected text</div>
+            </div>
+        </div>
+        after multi-column - selected
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <div style="contain: strict; height: 200px; width: 1000px;">
+            <span>
+                <div style="column-count: 2;">
+                    <div style="font-weight: bold;">this is area selected text this is area selected text this is area selected text this is area selected text
+                        this is area selected text this is area selected text this is area selected text this is area selected text
+                        this is area selected text this is area selected text this is area selected text this is area selected text
+                        this is area selected text this is area selected text this is area selected text this is area selected text
+                        this is area selected text this is area selected text this is area selected text this is area selected text
+                        this is area selected text this is area selected text this is area selected text this is area selected text
+                        this is area selected text this is area selected text this is area selected text this is area selected text</div>
+                   </div>
+                </div>
+                after multi-column - selected
+            </span>
+        </div>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <div style="contain: strict; height: 18px; width: 236px;">
+            abc<div style="float: right;">123</div>def
+        </div>
+    </body>
+</html>
