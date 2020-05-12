@@ -6,28 +6,28 @@
     </head>
     <body>
         <div>
-            <ul>
+            <ol style="margin-top: 40px;">
                 <li>this is not area selected text</li>
                 <li>this is area selected text</li>
                 <li>this is area selected text</li>
-            </ul>
-            this is area selected text
+            </ol>
+            <div style="margin-top:-19px;">this is area selected text</div>
         </div>
         <br/>
         <br/>
         <br/>
         <br/>
         <div style="contain: strict; height: 88px; width: 524px;">
-            <div style="display: grid;">
-                <span>
-                    <div>
-                        <ul>
-                            <li>this is area selected text</li>
-                            <li>this is area selected text</li>
-                        </ul>
-                        this is area selected text
-                    </div>
-                </span>
+            <div style="display: grid; 
+                grid-template-columns:40px;
+                grid-template-rows:19px calc(88px - 3 * 19px - 16px);">
+                    <ol start="2" style="margin:0; padding:0; grid-column:2;">
+                        <li>this is area selected text</li>
+                    </ol>
+                    <ol start="3" style="margin:0; padding:0; grid-column:2;grid-row:2;">
+                        <li>this is area selected text</li>
+                    </ol>
+                <div style="grid-column:1 / span 2; grid-row:3">this is area selected text</div>
             </div>
         </div>
     </body>
