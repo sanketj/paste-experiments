@@ -6,9 +6,15 @@
     </head>
     <body>
         before multi-column - not selected
-        <div style="column-count: 2;">
+        <div style="column-width: 100px; column-gap:15px;">
             <div>this is not area selected this is not area selected this is not area selected this is not area selected this is not area selected
                  this is not area selected this is not area selected this is not area selected this is not area selected this is not area selected</div>
+            <div style="column-span: all; background-color: green; color:yellow;">
+                SPANNING SPANNING SPANNING 
+            </div>
+            <div>
+                not selected
+            </div>
             <div style="font-weight: bold;">this is area selected text this is area selected text this is area selected text this is area selected text
                  this is area selected text this is area selected text this is area selected text this is area selected text
                  this is area selected text this is area selected text this is area selected text this is area selected text
@@ -16,27 +22,63 @@
                  this is area selected text this is area selected text this is area selected text this is area selected text
                  this is area selected text this is area selected text this is area selected text this is area selected text
                  this is area selected text this is area selected text this is area selected text this is area selected text</div>
+             <div>
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+                not not not not
+             </div>
             </div>
         </div>
-        after multi-column - selected
+        <div>after multi-column - selected</div>
         <br/>
         <br/>
         <br/>
         <br/>
-        <div style="contain: strict; height: 200px; width: 1000px;">
-            <span>
-                <div style="column-count: 2;">
-                    <div style="font-weight: bold;">this is area selected text this is area selected text this is area selected text this is area selected text
-                        this is area selected text this is area selected text this is area selected text this is area selected text
-                        this is area selected text this is area selected text this is area selected text this is area selected text
-                        this is area selected text this is area selected text this is area selected text this is area selected text
-                        this is area selected text this is area selected text this is area selected text this is area selected text
-                        this is area selected text this is area selected text this is area selected text this is area selected text
-                        this is area selected text this is area selected text this is area selected text this is area selected text</div>
-                   </div>
+        <div style="contain: strict; height: 340px; width: 656px;">
+            <div style="display:grid;grid-template-rows:301px;">
+                <div style="column-fill:auto;column-width: 118px; column-gap:15px; width:384px;">
+                    <div style="width:118px; height:18.8px"></div>
+                    <div style="font-weight: bold;">this is area selected text this is area selected text this is area selected text this is area selected text this is area selected text this is area selected text this is area selected text this is area selected text
+                     this is area selected text this is area selected text this is area selected text this is area selected text
+                     this is area selected text this is area selected text this is area selected text this is area selected text
+                     this is area selected text this is area selected text this is area selected text this is area selected text
+                     this is area selected text this is area selected text this is area selected text this is area selected text
+                     this is area selected text this is area selected text this is area selected text this is area selected text</div>
                 </div>
-                after multi-column - selected
-            </span>
+                <div style="grid-row:2;width: 656px;">after multi-column - selected</div>
+            </div>
         </div>
     </body>
 </html>
