@@ -14,7 +14,12 @@ document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'Enter': {
             if (document.cropMode) {
-                commitCrop();
+                // TODO: Broken for crop from top and left.
+                document.pasteContainer.style.position = 'absolute';
+                document.pasteContainer.style.left = document.pasteContainerOverlay.offsetLeft + 'px';
+                document.pasteContainer.style.top = document.pasteContainerOverlay.offsetTop + 'px';
+                document.pasteContainer.style.width = document.pasteContainerOverlay.offsetWidth + 'px';
+                document.pasteContainer.style.height = document.pasteContainerOverlay.offsetHeight + 'px';
             }
             // fallthrough
         }
@@ -22,20 +27,11 @@ document.addEventListener('keydown', (event) => {
             document.bodyOverlay.style.display = 'none';
             document.pasteContainerOverlay.style.display = 'none';
             document.cropMode = false;
-            document.scaleMode = false;
+            document.resizeMode = false;
             break;
         }
     }
 });
-
-function commitCrop() {
-    // TODO: Broken for crop from top and/or left.
-    document.pasteContainer.style.position = 'absolute';
-    document.pasteContainer.style.left = document.pasteContainerOverlay.offsetLeft + 'px';
-    document.pasteContainer.style.top = document.pasteContainerOverlay.offsetTop + 'px';
-    document.pasteContainer.style.width = document.pasteContainerOverlay.offsetWidth + 'px';
-    document.pasteContainer.style.height = document.pasteContainerOverlay.offsetHeight + 'px';
-}
 
 function pasteCallback(pasteEvent) {
     pasteEvent.preventDefault();
@@ -74,40 +70,48 @@ function pasteCallback(pasteEvent) {
 
     document.addEventListener('mousedown', (mouseEvent) => {
         document.pasteContainerOverlay.dragPosition = findDragPosition(mouseEvent.clientX, mouseEvent.clientY);
+        let boundingRect = document.pasteContainerOverlay.getBoundingClientRect();
+        let left = Math.round(boundingRect.left);
+        let right = Math.round(boundingRect.right);
+        let top = Math.round(boundingRect.top);
+        let bottom = Math.round(boundingRect.bottom);
+        if (document.pasteContainerOverlay.dragPosition == DRAG_POSITION.NONE && ) {
+            document.bodyOverlay.style.display = 'none';
+            document.pasteContainerOverlay.style.display = 'none';
+            document.cropMode = false;
+            document.resizeMode = false;
+        }
     });
     document.addEventListener('mousemove', (mouseEvent) => {
         adjustPasteOverlay(mouseEvent);
+        if (document.resizeMode) {
+            // TODO: Broken for resize from top and left.
+            if (document.pasteContainerOverlay.dragPosition != DRAG_POSITION.NONE) {
+                let xScaleFactor =
+                    document.pasteContainerOverlay.offsetWidth / document.pasteContainer.offsetWidth;
+                let yScaleFactor =
+                    document.pasteContainerOverlay.offsetHeight / document.pasteContainer.offsetHeight;
+                document.pasteContainer.style.transformOrigin = 'top left';
+                document.pasteContainer.style.transform = 'scale(' + xScaleFactor + ',' + yScaleFactor + ')';
+            }
+        }
     });
     document.addEventListener('mouseup', (mouseEvent) => {
-        document.pasteContainerOverlay.dragPosition = DRAG_POSITION.UNDEFINED;
+        document.pasteContainerOverlay.dragPosition = DRAG_POSITION.NONE;
     });
 
-    document.getElementById('cropButton').addEventListener('click', () => {
+    document.getElementById('cropButton').addEventListener('click', (event) => {
         document.bodyOverlay.style.display = 'block';
         document.pasteContainerOverlay.style.display = 'block';
         document.cropMode = true;
+        event.stopPropagation();
     });
 
-    document.getElementById('scaleButton').addEventListener('click', () => {
+    document.getElementById('resizeButton').addEventListener('click', (event) => {
         document.bodyOverlay.style.display = 'block';
         document.pasteContainerOverlay.style.display = 'block';
-        document.scaleMode = true;
-
-        document.addEventListener('mousemove', () => {
-            if (document.pasteContainerOverlay.dragPosition != DRAG_POSITION.UNDEFINED) {
-                // TODO: Figure out how to scale
-                let xScaleFactor =
-                    (document.pasteContainerOverlay.offsetWidth - document.pasteContainerOverlay.offsetWidth) / document.pasteContainer.offsetWidth;
-                xScaleFactor = xScaleFactor == 0 ? 1 : xScaleFactor;
-                let yScaleFactor =
-                    (document.pasteContainerOverlay.offsetHeight - document.pasteContainer.offsetHeight) / document.pasteContainer.offsetHeight;
-                yScaleFactor = yScaleFactor == 0 ? 1 : yScaleFactor;
-                // let xTranslateFactor = document.pasteContainer.offsetWidth - document.pasteContainerOverlay.offsetWidth;
-                // let yTranslateFactor = document.pasteContainer.offsetHeight - document.pasteContainerOverlay.offsetHeight;
-                document.pasteContainer.style.transform =
-                    'scale(' + xScaleFactor + ',' + yScaleFactor + ')';
-            }
-        });
+        document.resizeMode = true;
+        event.stopPropagation();
     });
 
     function adjustPasteOverlay(mouseEvent) {
@@ -264,10 +268,10 @@ toolbar.setAttribute('id', 'toolbar');
 let cropButton = document.createElement('button');
 cropButton.setAttribute('id', 'cropButton');
 cropButton.append('Crop');
-let scaleButton = document.createElement('button');
-scaleButton.setAttribute('id', 'scaleButton');
-scaleButton.append('Scale');
-toolbar.append(cropButton, scaleButton);
+let resizeButton = document.createElement('button');
+resizeButton.setAttribute('id', 'resizeButton');
+resizeButton.append('Resize');
+toolbar.append(cropButton, resizeButton);
 toolbar.addEventListener('mouseenter', () => toolbar.style.display = 'block');
 toolbar.addEventListener('mouseleave', () => toolbar.style.display = 'none');
 document.body.append(toolbar);
