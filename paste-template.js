@@ -70,12 +70,7 @@ function pasteCallback(pasteEvent) {
 
     document.addEventListener('mousedown', (mouseEvent) => {
         document.pasteContainerOverlay.dragPosition = findDragPosition(mouseEvent.clientX, mouseEvent.clientY);
-        let boundingRect = document.pasteContainerOverlay.getBoundingClientRect();
-        let left = Math.round(boundingRect.left);
-        let right = Math.round(boundingRect.right);
-        let top = Math.round(boundingRect.top);
-        let bottom = Math.round(boundingRect.bottom);
-        if (document.pasteContainerOverlay.dragPosition == DRAG_POSITION.NONE && ) {
+        if (document.pasteContainerOverlay.dragPosition == DRAG_POSITION.NONE) {
             document.bodyOverlay.style.display = 'none';
             document.pasteContainerOverlay.style.display = 'none';
             document.cropMode = false;
