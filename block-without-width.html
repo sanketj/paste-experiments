@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		html {
+			font-family: sans-serif;
+		}
+	</style>
+</head>
+<body>
+	<script type="module">
+		addEventListener("paste", handlePaste)
+		function handlePaste(e) {
+			e.preventDefault()
+			
+			let s = getSelection()
+			let r = s.getRangeAt(0)
+			
+			r.deleteContents()
+			let h = getPasteHTML()
+			r.insertNode(h)
+			r.collapse()
+			s.removeAllRanges()
+			s.addRange(r)
+		}
+
+		function getPasteHTML() {
+			let d = document.createElement("div")
+			d.innerHTML = 
+`<div style="contain:strict;width:402px;height:38px;">
+	<div style="display: grid; grid-template-rows: 19px;">
+		<div style="grid-row:1; width:300px; height:19px; background-color: green; color:yellow;">AREA-SELECTED HEADING</div>
+		<div style="width:402px;height:19px;grid-row:2">Short area-selected text</div>
+	</div>
+</div>`
+
+			return d.firstChild
+		}
+	</script>
+	Some not selected text before.
+	<div style="width:300px; background-color: green; color:yellow;">AREA-SELECTED HEADING</div>
+	<div>Short area-selected text</div>
+	<br>
+	<br>
+	<br>
+	<h3>Paste below:</h3>
+	<div contenteditable style="min-height: 200px; border: 1px solid black; padding: 10px; overflow:auto">
+	</div>	
