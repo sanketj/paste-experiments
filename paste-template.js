@@ -1,4 +1,4 @@
-const DRAG_POSITION = {
+const DRAG_ANCHOR = {
     NONE: 0,
     TOP_LEFT: 1,
     LEFT: 2,
@@ -10,22 +10,226 @@ const DRAG_POSITION = {
     TOP: 8,
 }
 
+class PasteToolbar extends HTMLElement {
+    constructor() {
+        super();
+
+        this.addEventListener('mouseenter', () => this.classList.remove('hidden'));
+        this.addEventListener('mouseleave', () => this.classList.add('hidden'));
+
+        this.cropButton_ = new CropButton('Crop');
+        this.resizeButton_ = new ResizeButton('Resize');
+        this.classList.add('hidden');
+        this.append(this.cropButton_, this.resizeButton_);
+    }
+}
+window.customElements.define('paste-toolbar', PasteToolbar);
+
+class PasteToolbarButton extends HTMLElement {
+    constructor(buttonContents) {
+        super();
+
+        this.append(buttonContents);
+        this.addEventListener('click', () => {
+            document.getElementById('bodyOverlay').classList.remove('hidden');
+            document.querySelector('paste-overlay').classList.remove('hidden');
+        });
+    }
+}
+window.customElements.define('paste-toolbar-button', PasteToolbarButton);
+
+class CropButton extends PasteToolbarButton {
+    constructor(buttonContents) {
+        super(buttonContents);
+
+        this.addEventListener('click', () => document.cropMode = true);
+    }
+}
+window.customElements.define('crop-button', CropButton);
+
+class ResizeButton extends PasteToolbarButton {
+    constructor(buttonContents) {
+        super(buttonContents);
+
+        this.addEventListener('click', () => document.resizeMode = true);
+    }
+}
+window.customElements.define('resize-button', ResizeButton);
+
+class PasteOverlay extends HTMLElement {
+    constructor(left, top, width, height) {
+        super();
+
+        this.style.left = left + 'px';
+        this.style.top = top + 'px';
+        this.style.width = width + 'px';
+        this.style.height = height + 'px';
+        this.classList.add('hidden');
+        this.dragAnchor_ = DRAG_ANCHOR.NONE;
+    }
+
+    get dragAnchor() {
+        return this.dragAnchor_;
+    }
+
+    updateDragAnchor(mousePosX, mousePosY) {
+        const TOLERANCE = 5;
+        let boundingRect = this.getBoundingClientRect();
+        let left = Math.round(boundingRect.left);
+        let right = Math.round(boundingRect.right);
+        let top = Math.round(boundingRect.top);
+        let bottom = Math.round(boundingRect.bottom);
+        if (Math.abs(left - mousePosX) <= TOLERANCE && Math.abs(top - mousePosY) <= TOLERANCE) {
+            this.dragAnchor_ = DRAG_ANCHOR.TOP_LEFT;
+        } else if (Math.abs(left - mousePosX) <= TOLERANCE && Math.abs(bottom - mousePosY) <= TOLERANCE) {
+            this.dragAnchor_ = DRAG_ANCHOR.BOTTOM_LEFT;
+        } else if (Math.abs(right - mousePosX) <= TOLERANCE && Math.abs(bottom - mousePosY) <= TOLERANCE) {
+            this.dragAnchor_ = DRAG_ANCHOR.BOTTOM_RIGHT;
+        } else if (Math.abs(right - mousePosX) <= TOLERANCE && Math.abs(top - mousePosY) <= TOLERANCE) {
+            this.dragAnchor_ = DRAG_ANCHOR.TOP_RIGHT;
+        } else if (Math.abs(left - mousePosX) <= TOLERANCE && top - TOLERANCE < mousePosY && mousePosY < bottom + TOLERANCE) {
+            this.dragAnchor_ = DRAG_ANCHOR.LEFT;
+        } else if (left - TOLERANCE < mousePosX && mousePosX < right + TOLERANCE && Math.abs(bottom - mousePosY) <= TOLERANCE) {
+            this.dragAnchor_ = DRAG_ANCHOR.BOTTOM;
+        } else if (Math.abs(right - mousePosX) <= TOLERANCE && top - TOLERANCE < mousePosY && mousePosY < bottom + TOLERANCE) {
+            this.dragAnchor_ = DRAG_ANCHOR.RIGHT;
+        } else if (left - TOLERANCE < mousePosX && mousePosX < right + TOLERANCE && Math.abs(top - mousePosY) <= TOLERANCE) {
+            this.dragAnchor_ = DRAG_ANCHOR.TOP;
+        } else {
+            this.dragAnchor_ = DRAG_ANCHOR.NONE;
+        }
+    }
+
+    resetDragAnchor() {
+        this.dragAnchor_ = DRAG_ANCHOR.NONE;
+    }
+
+    adjustForDrag(mousePosX, mousePosY) {
+        switch (this.dragAnchor_) {
+            case DRAG_ANCHOR.TOP_LEFT: {
+                let xDiff = mousePosX - this.offsetLeft;
+                let yDiff = mousePosY - this.offsetTop;
+                this.style.width = (this.offsetWidth - xDiff -
+                    window.getComputedStyle(this).paddingLeft.replace('px', '') - 
+                    window.getComputedStyle(this).paddingRight.replace('px', '') -
+                    window.getComputedStyle(this).borderLeftWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderRightWidth.replace('px', '')) + 'px';
+                this.style.height = (this.offsetHeight - yDiff -
+                    window.getComputedStyle(this).paddingTop.replace('px', '') - 
+                    window.getComputedStyle(this).paddingBottom.replace('px', '') -
+                    window.getComputedStyle(this).borderTopWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderBottomWidth.replace('px', '')) + 'px';
+                this.style.left = mousePosX + 'px';
+                this.style.top = mousePosY + 'px';
+                break;
+            }
+            case DRAG_ANCHOR.BOTTOM_LEFT: {
+                let xDiff = mousePosX - this.offsetLeft;
+                let yRemainder = mousePosY - this.offsetTop;
+                this.style.width = (this.offsetWidth - xDiff -
+                    window.getComputedStyle(this).paddingLeft.replace('px', '') - 
+                    window.getComputedStyle(this).paddingRight.replace('px', '') -
+                    window.getComputedStyle(this).borderLeftWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderRightWidth.replace('px', '')) + 'px';
+                this.style.height = (yRemainder -
+                    window.getComputedStyle(this).paddingTop.replace('px', '') - 
+                    window.getComputedStyle(this).paddingBottom.replace('px', '') -
+                    window.getComputedStyle(this).borderTopWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderBottomWidth.replace('px', '')) + 'px';
+                this.style.left = mousePosX + 'px';
+                break;
+            }
+            case DRAG_ANCHOR.BOTTOM_RIGHT: {
+                let xRemainder = mousePosX - this.offsetLeft;
+                let yRemainder = mousePosY - this.offsetTop;
+                this.style.width = (xRemainder -
+                    window.getComputedStyle(this).paddingLeft.replace('px', '') - 
+                    window.getComputedStyle(this).paddingRight.replace('px', '') -
+                    window.getComputedStyle(this).borderLeftWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderRightWidth.replace('px', '')) + 'px';
+                this.style.height = (yRemainder -
+                    window.getComputedStyle(this).paddingTop.replace('px', '') - 
+                    window.getComputedStyle(this).paddingBottom.replace('px', '') -
+                    window.getComputedStyle(this).borderTopWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderBottomWidth.replace('px', '')) + 'px';
+                break;
+            }
+            case DRAG_ANCHOR.TOP_RIGHT: {
+                let xRemainder = mousePosX - this.offsetLeft;
+                let yDiff = mousePosY - this.offsetTop;
+                this.style.width = (xRemainder -
+                    window.getComputedStyle(this).paddingLeft.replace('px', '') - 
+                    window.getComputedStyle(this).paddingRight.replace('px', '') -
+                    window.getComputedStyle(this).borderLeftWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderRightWidth.replace('px', '')) + 'px';
+                this.style.height = (this.offsetHeight - yDiff -
+                    window.getComputedStyle(this).paddingTop.replace('px', '') - 
+                    window.getComputedStyle(this).paddingBottom.replace('px', '') -
+                    window.getComputedStyle(this).borderTopWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderBottomWidth.replace('px', '')) + 'px';
+                this.style.top = mousePosY + 'px';
+                break;
+            }
+            case DRAG_ANCHOR.LEFT: {
+                let xDiff = mousePosX - this.offsetLeft;
+                this.style.width = (this.offsetWidth - xDiff -
+                    window.getComputedStyle(this).paddingLeft.replace('px', '') - 
+                    window.getComputedStyle(this).paddingRight.replace('px', '') -
+                    window.getComputedStyle(this).borderLeftWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderRightWidth.replace('px', '')) + 'px';
+                this.style.left = mousePosX + 'px';
+                break;
+            }
+            case DRAG_ANCHOR.TOP: {
+                let yDiff = mousePosY - this.offsetTop;
+                this.style.height = (this.offsetHeight - yDiff -
+                    window.getComputedStyle(this).paddingTop.replace('px', '') - 
+                    window.getComputedStyle(this).paddingBottom.replace('px', '') -
+                    window.getComputedStyle(this).borderTopWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderBottomWidth.replace('px', '')) + 'px';
+                this.style.top = mousePosY + 'px';
+                break;
+            }
+            case DRAG_ANCHOR.RIGHT: {
+                let xRemainder = mousePosX - this.offsetLeft;
+                this.style.width = (xRemainder -
+                    window.getComputedStyle(this).paddingLeft.replace('px', '') - 
+                    window.getComputedStyle(this).paddingRight.replace('px', '') -
+                    window.getComputedStyle(this).borderLeftWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderRightWidth.replace('px', '')) + 'px';
+                break;
+            }
+            case DRAG_ANCHOR.BOTTOM: {
+                let yRemainder = mousePosY - this.offsetTop;
+                this.style.height = (yRemainder -
+                    window.getComputedStyle(this).paddingTop.replace('px', '') - 
+                    window.getComputedStyle(this).paddingBottom.replace('px', '') -
+                    window.getComputedStyle(this).borderTopWidth.replace('px', '') - 
+                    window.getComputedStyle(this).borderBottomWidth.replace('px', '')) + 'px';
+                break;
+            }
+        }
+    }
+}
+window.customElements.define('paste-overlay', PasteOverlay);
+
 document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'Enter': {
             if (document.cropMode) {
                 // TODO: Broken for crop from top and left.
+                let pasteOverlay = document.querySelector('paste-overlay');
                 document.pasteContainer.style.position = 'absolute';
-                document.pasteContainer.style.left = document.pasteContainerOverlay.offsetLeft + 'px';
-                document.pasteContainer.style.top = document.pasteContainerOverlay.offsetTop + 'px';
-                document.pasteContainer.style.width = document.pasteContainerOverlay.offsetWidth + 'px';
-                document.pasteContainer.style.height = document.pasteContainerOverlay.offsetHeight + 'px';
+                document.pasteContainer.style.left = pasteOverlay.offsetLeft + 'px';
+                document.pasteContainer.style.top = pasteOverlay.offsetTop + 'px';
+                document.pasteContainer.style.width = pasteOverlay.offsetWidth + 'px';
+                document.pasteContainer.style.height = pasteOverlay.offsetHeight + 'px';
             }
             // fallthrough
         }
         case 'Escape': {
-            document.bodyOverlay.style.display = 'none';
-            document.pasteContainerOverlay.style.display = 'none';
+            document.getElementById('bodyOverlay').classList.add('hidden');
+            document.querySelector('paste-overlay').classList.add('hidden');
             document.cropMode = false;
             document.resizeMode = false;
             break;
@@ -44,239 +248,51 @@ function pasteCallback(pasteEvent) {
     selection.removeAllRanges();
     selection.addRange(range);
 
-    document.pasteContainerOverlay = document.createElement('div');
-    document.pasteContainerOverlay.setAttribute('id', 'pasteContainerOverlay');
-    document.pasteContainerOverlay.style.position = 'absolute';
-    document.pasteContainerOverlay.style.width = document.pasteContainer.offsetWidth + 'px';
-    document.pasteContainerOverlay.style.height = document.pasteContainer.offsetHeight + 'px';
-    document.pasteContainerOverlay.style.left = document.pasteContainer.offsetLeft + 'px';
-    document.pasteContainerOverlay.style.top = document.pasteContainer.offsetTop + 'px';
-    document.pasteContainerOverlay.style.border = '1px dashed white';
-    document.pasteContainerOverlay.style.display = 'none';
-    document.pasteContainerOverlay.style.overflow = 'hidden';
-    document.body.append(document.pasteContainerOverlay);
-
+    let pasteOverlay = new PasteOverlay(document.pasteContainer.offsetLeft, document.pasteContainer.offsetTop,
+        document.pasteContainer.offsetWidth, document.pasteContainer.offsetHeight);
+    document.body.append(pasteOverlay);
     document.pasteContainer.addEventListener('mouseenter', (event) => {
-        let toolbar = document.getElementById('toolbar');
-        toolbar.style.display = 'block';
-        toolbar.style.left = event.clientX + 'px';
-        toolbar.style.top = event.clientY + 'px';
+        let pasteToolbar = document.querySelector('paste-toolbar');
+        pasteToolbar.classList.remove('hidden');
+        pasteToolbar.style.left = event.clientX + 'px';
+        pasteToolbar.style.top = event.clientY + 'px';
     });
 
     document.pasteContainer.addEventListener('mouseleave', () => {
-        let toolbar = document.getElementById('toolbar');
-        toolbar.style.display = 'none';
+        let pasteToolbar = document.querySelector('paste-toolbar');
+        pasteToolbar.classList.add('hidden');
     });
 
     document.addEventListener('mousedown', (mouseEvent) => {
-        document.pasteContainerOverlay.dragPosition = findDragPosition(mouseEvent.clientX, mouseEvent.clientY);
-        if (document.pasteContainerOverlay.dragPosition == DRAG_POSITION.NONE) {
-            document.bodyOverlay.style.display = 'none';
-            document.pasteContainerOverlay.style.display = 'none';
-            document.cropMode = false;
-            document.resizeMode = false;
-        }
+        let pasteOverlay = document.querySelector('paste-overlay');
+        pasteOverlay.updateDragAnchor(mouseEvent.clientX, mouseEvent.clientY);
     });
     document.addEventListener('mousemove', (mouseEvent) => {
-        adjustPasteOverlay(mouseEvent);
+        let pasteOverlay = document.querySelector('paste-overlay');
+        pasteOverlay.adjustForDrag(mouseEvent.clientX, mouseEvent.clientY);
         if (document.resizeMode) {
             // TODO: Broken for resize from top and left.
-            if (document.pasteContainerOverlay.dragPosition != DRAG_POSITION.NONE) {
-                let xScaleFactor =
-                    document.pasteContainerOverlay.offsetWidth / document.pasteContainer.offsetWidth;
-                let yScaleFactor =
-                    document.pasteContainerOverlay.offsetHeight / document.pasteContainer.offsetHeight;
+            if (pasteOverlay.dragAnchor != DRAG_ANCHOR.NONE) {
+                let xScaleFactor = pasteOverlay.offsetWidth / document.pasteContainer.offsetWidth;
+                let yScaleFactor = pasteOverlay.offsetHeight / document.pasteContainer.offsetHeight;
                 document.pasteContainer.style.transformOrigin = 'top left';
                 document.pasteContainer.style.transform = 'scale(' + xScaleFactor + ',' + yScaleFactor + ')';
             }
         }
     });
     document.addEventListener('mouseup', (mouseEvent) => {
-        document.pasteContainerOverlay.dragPosition = DRAG_POSITION.NONE;
+        document.querySelector('paste-overlay').resetDragAnchor();
     });
-
-    document.getElementById('cropButton').addEventListener('click', (event) => {
-        document.bodyOverlay.style.display = 'block';
-        document.pasteContainerOverlay.style.display = 'block';
-        document.cropMode = true;
-        event.stopPropagation();
-    });
-
-    document.getElementById('resizeButton').addEventListener('click', (event) => {
-        document.bodyOverlay.style.display = 'block';
-        document.pasteContainerOverlay.style.display = 'block';
-        document.resizeMode = true;
-        event.stopPropagation();
-    });
-
-    function adjustPasteOverlay(mouseEvent) {
-        switch (document.pasteContainerOverlay.dragPosition) {
-            case DRAG_POSITION.TOP_LEFT: {
-                let xDiff = mouseEvent.clientX - document.pasteContainerOverlay.offsetLeft;
-                let yDiff = mouseEvent.clientY - document.pasteContainerOverlay.offsetTop;
-                document.pasteContainerOverlay.style.width = (document.pasteContainerOverlay.offsetWidth - xDiff -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingLeft.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingRight.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderLeftWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderRightWidth.replace('px', '')) + 'px';
-                document.pasteContainerOverlay.style.height = (document.pasteContainerOverlay.offsetHeight - yDiff -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingTop.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingBottom.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderTopWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderBottomWidth.replace('px', '')) + 'px';
-                document.pasteContainerOverlay.style.left = mouseEvent.clientX + 'px';
-                document.pasteContainerOverlay.style.top = mouseEvent.clientY + 'px';
-                break;
-            }
-            case DRAG_POSITION.BOTTOM_LEFT: {
-                let xDiff = mouseEvent.clientX - document.pasteContainerOverlay.offsetLeft;
-                let yRemainder = mouseEvent.clientY - document.pasteContainerOverlay.offsetTop;
-                document.pasteContainerOverlay.style.width = (document.pasteContainerOverlay.offsetWidth - xDiff -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingLeft.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingRight.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderLeftWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderRightWidth.replace('px', '')) + 'px';
-                document.pasteContainerOverlay.style.height = (yRemainder -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingTop.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingBottom.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderTopWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderBottomWidth.replace('px', '')) + 'px';
-                document.pasteContainerOverlay.style.left = mouseEvent.clientX + 'px';
-                break;
-            }
-            case DRAG_POSITION.BOTTOM_RIGHT: {
-                let xRemainder = mouseEvent.clientX - document.pasteContainerOverlay.offsetLeft;
-                let yRemainder = mouseEvent.clientY - document.pasteContainerOverlay.offsetTop;
-                document.pasteContainerOverlay.style.width = (xRemainder -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingLeft.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingRight.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderLeftWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderRightWidth.replace('px', '')) + 'px';
-                document.pasteContainerOverlay.style.height = (yRemainder -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingTop.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingBottom.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderTopWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderBottomWidth.replace('px', '')) + 'px';
-                break;
-            }
-            case DRAG_POSITION.TOP_RIGHT: {
-                let xRemainder = mouseEvent.clientX - document.pasteContainerOverlay.offsetLeft;
-                let yDiff = mouseEvent.clientY - document.pasteContainerOverlay.offsetTop;
-                document.pasteContainerOverlay.style.width = (xRemainder -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingLeft.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingRight.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderLeftWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderRightWidth.replace('px', '')) + 'px';
-                document.pasteContainerOverlay.style.height = (document.pasteContainerOverlay.offsetHeight - yDiff -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingTop.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingBottom.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderTopWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderBottomWidth.replace('px', '')) + 'px';
-                document.pasteContainerOverlay.style.top = mouseEvent.clientY + 'px';
-                break;
-            }
-            case DRAG_POSITION.LEFT: {
-                let xDiff = mouseEvent.clientX - document.pasteContainerOverlay.offsetLeft;
-                document.pasteContainerOverlay.style.width = (document.pasteContainerOverlay.offsetWidth - xDiff -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingLeft.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingRight.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderLeftWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderRightWidth.replace('px', '')) + 'px';
-                document.pasteContainerOverlay.style.left = mouseEvent.clientX + 'px';
-                break;
-            }
-            case DRAG_POSITION.TOP: {
-                let yDiff = mouseEvent.clientY - document.pasteContainerOverlay.offsetTop;
-                document.pasteContainerOverlay.style.height = (document.pasteContainerOverlay.offsetHeight - yDiff -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingTop.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingBottom.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderTopWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderBottomWidth.replace('px', '')) + 'px';
-                document.pasteContainerOverlay.style.top = mouseEvent.clientY + 'px';
-                break;
-            }
-            case DRAG_POSITION.RIGHT: {
-                let xRemainder = mouseEvent.clientX - document.pasteContainerOverlay.offsetLeft;
-                document.pasteContainerOverlay.style.width = (xRemainder -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingLeft.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingRight.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderLeftWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderRightWidth.replace('px', '')) + 'px';
-                break;
-            }
-            case DRAG_POSITION.BOTTOM: {
-                let yRemainder = mouseEvent.clientY - document.pasteContainerOverlay.offsetTop;
-                document.pasteContainerOverlay.style.height = (yRemainder -
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingTop.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).paddingBottom.replace('px', '') -
-                    window.getComputedStyle(document.pasteContainerOverlay).borderTopWidth.replace('px', '') - 
-                    window.getComputedStyle(document.pasteContainerOverlay).borderBottomWidth.replace('px', '')) + 'px';
-                break;
-            }
-        }
-    }
-
-    function findDragPosition(mousePosX, mousePosY) {
-        const TOLERANCE = 5;
-        let boundingRect = document.pasteContainerOverlay.getBoundingClientRect();
-        let left = Math.round(boundingRect.left);
-        let right = Math.round(boundingRect.right);
-        let top = Math.round(boundingRect.top);
-        let bottom = Math.round(boundingRect.bottom);
-        if (Math.abs(left - mousePosX) <= TOLERANCE && Math.abs(top - mousePosY) <= TOLERANCE) {
-            return DRAG_POSITION.TOP_LEFT;
-        } else if (Math.abs(left - mousePosX) <= TOLERANCE && Math.abs(bottom - mousePosY) <= TOLERANCE) {
-            return DRAG_POSITION.BOTTOM_LEFT;
-        } else if (Math.abs(right - mousePosX) <= TOLERANCE && Math.abs(bottom - mousePosY) <= TOLERANCE) {
-            return DRAG_POSITION.BOTTOM_RIGHT;
-        } else if (Math.abs(right - mousePosX) <= TOLERANCE && Math.abs(top - mousePosY) <= TOLERANCE) {
-            return DRAG_POSITION.TOP_RIGHT;
-        } else if (Math.abs(left - mousePosX) <= TOLERANCE && top - TOLERANCE < mousePosY && mousePosY < bottom + TOLERANCE) {
-            return DRAG_POSITION.LEFT;
-        } else if (left - TOLERANCE < mousePosX && mousePosX < right + TOLERANCE && Math.abs(bottom - mousePosY) <= TOLERANCE) {
-            return DRAG_POSITION.BOTTOM;
-        } else if (Math.abs(right - mousePosX) <= TOLERANCE && top - TOLERANCE < mousePosY && mousePosY < bottom + TOLERANCE) {
-            return DRAG_POSITION.RIGHT;
-        } else if (left - TOLERANCE < mousePosX && mousePosX < right + TOLERANCE && Math.abs(top - mousePosY) <= TOLERANCE) {
-            return DRAG_POSITION.TOP;
-        } else {
-            return DRAG_POSITION.NONE;
-        }
-    }
 }
 
-let pasteHeader = document.createElement('h3');
-pasteHeader.append('Paste from Smart Copy into container below:');
+let header = document.createElement('h3');
+header.append('Paste from Smart Copy into container below:');
 let ceContainer = document.createElement('div');
+ceContainer.setAttribute('id', 'ceContainer');
 ceContainer.setAttribute('contenteditable', 'true');
-ceContainer.style.minHeight = '200px';
-ceContainer.style.border = '1px solid black';
-ceContainer.style.padding = '10px';
-ceContainer.style.overflow = 'auto';
-document.body.append(pasteHeader, ceContainer);
 ceContainer.addEventListener('paste', pasteCallback);
-
-let toolbar = document.createElement('div');
-toolbar.style.display = 'none';
-toolbar.style.position = 'absolute';
-toolbar.setAttribute('id', 'toolbar');
-let cropButton = document.createElement('button');
-cropButton.setAttribute('id', 'cropButton');
-cropButton.append('Crop');
-let resizeButton = document.createElement('button');
-resizeButton.setAttribute('id', 'resizeButton');
-resizeButton.append('Resize');
-toolbar.append(cropButton, resizeButton);
-toolbar.addEventListener('mouseenter', () => toolbar.style.display = 'block');
-toolbar.addEventListener('mouseleave', () => toolbar.style.display = 'none');
-document.body.append(toolbar);
-
-document.bodyOverlay = document.createElement('div');
-document.bodyOverlay.style.position = 'fixed';
-document.bodyOverlay.style.width = '100%';
-document.bodyOverlay.style.height = '100%';
-document.bodyOverlay.style.left = 0;
-document.bodyOverlay.style.top = 0;
-document.bodyOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-document.bodyOverlay.style.display = 'none';
-document.body.append(document.bodyOverlay);
+let pasteToolbar = new PasteToolbar();
+let bodyOverlay = document.createElement('div');
+bodyOverlay.setAttribute('id', 'bodyOverlay');
+bodyOverlay.classList.add('hidden');
+document.body.append(header, ceContainer, pasteToolbar, bodyOverlay);

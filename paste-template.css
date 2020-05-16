@@ -1,0 +1,46 @@
+#bodyOverlay {
+    background-color: rgba(0, 0, 0, 0.5);
+    display: block;
+    left: 0;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+
+#bodyOverlay.hidden {
+    display: none;
+}
+
+paste-toolbar {
+    display: flex;
+    position: absolute;
+}
+
+paste-toolbar.hidden {
+    display: none;
+}
+
+paste-toolbar > * {
+    background-color: lightgrey;
+    border:1px solid grey;
+    border-radius:2px;
+}
+
+paste-overlay {
+    border: 1px dashed white;
+    display: block;
+    overflow: hidden;
+    position: absolute;
+}
+
+paste-overlay.hidden {
+    display: none;
+}
+
+#ceContainer {
+    border: 1px solid black;
+    min-height: 200px;
+    overflow: auto;
+    padding: 10px;
+}
