@@ -31,7 +31,7 @@ class PasteToolbarButton extends HTMLElement {
 
         this.append(buttonContents);
         this.addEventListener('click', () => {
-            document.getElementById('bodyOverlay').classList.remove('hidden');
+            document.querySelector('body-overlay').classList.remove('hidden');
             document.querySelector('paste-overlay').classList.remove('hidden');
         });
     }
@@ -213,6 +213,15 @@ class PasteOverlay extends HTMLElement {
 }
 window.customElements.define('paste-overlay', PasteOverlay);
 
+class BodyOverlay extends HTMLElement {
+    constructor() {
+        super();
+
+        this.classList.add('hidden');
+    }
+}
+window.customElements.define('body-overlay', BodyOverlay);
+
 document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'Enter': {
@@ -228,7 +237,7 @@ document.addEventListener('keydown', (event) => {
             // fallthrough
         }
         case 'Escape': {
-            document.getElementById('bodyOverlay').classList.add('hidden');
+            document.querySelector('body-overlay').classList.add('hidden');
             document.querySelector('paste-overlay').classList.add('hidden');
             document.cropMode = false;
             document.resizeMode = false;
@@ -251,11 +260,11 @@ function pasteCallback(pasteEvent) {
     let pasteOverlay = new PasteOverlay(document.pasteContainer.offsetLeft, document.pasteContainer.offsetTop,
         document.pasteContainer.offsetWidth, document.pasteContainer.offsetHeight);
     document.body.append(pasteOverlay);
-    document.pasteContainer.addEventListener('mouseenter', (event) => {
+    document.pasteContainer.addEventListener('mouseenter', (mouseEvent) => {
         let pasteToolbar = document.querySelector('paste-toolbar');
         pasteToolbar.classList.remove('hidden');
-        pasteToolbar.style.left = event.clientX + 'px';
-        pasteToolbar.style.top = event.clientY + 'px';
+        pasteToolbar.style.left = mouseEvent.clientX + 'px';
+        pasteToolbar.style.top = mouseEvent.clientY + 'px';
     });
 
     document.pasteContainer.addEventListener('mouseleave', () => {
@@ -280,7 +289,7 @@ function pasteCallback(pasteEvent) {
             }
         }
     });
-    document.addEventListener('mouseup', (mouseEvent) => {
+    document.addEventListener('mouseup', () => {
         document.querySelector('paste-overlay').resetDragAnchor();
     });
 }
@@ -292,7 +301,5 @@ ceContainer.setAttribute('id', 'ceContainer');
 ceContainer.setAttribute('contenteditable', 'true');
 ceContainer.addEventListener('paste', pasteCallback);
 let pasteToolbar = new PasteToolbar();
-let bodyOverlay = document.createElement('div');
-bodyOverlay.setAttribute('id', 'bodyOverlay');
-bodyOverlay.classList.add('hidden');
+let bodyOverlay = new BodyOverlay();
 document.body.append(header, ceContainer, pasteToolbar, bodyOverlay);

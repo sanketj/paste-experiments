@@ -1,4 +1,4 @@
-#bodyOverlay {
+body-overlay {
     background-color: rgba(0, 0, 0, 0.5);
     display: block;
     left: 0;
@@ -8,7 +8,7 @@
     width: 100%;
 }
 
-#bodyOverlay.hidden {
+body-overlay.hidden {
     display: none;
 }
 
