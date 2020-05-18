@@ -222,17 +222,38 @@ class BodyOverlay extends HTMLElement {
 }
 window.customElements.define('body-overlay', BodyOverlay);
 
+class PasteWrapper extends HTMLElement {
+    constructor(pasteContainer) {
+        super();
+
+        this.append(pasteContainer);
+        this.style.cssText = pasteContainer.style.cssText;
+
+        this.addEventListener('mouseenter', (mouseEvent) => {
+            let pasteToolbar = document.querySelector('paste-toolbar');
+            pasteToolbar.classList.remove('hidden');
+            pasteToolbar.style.left = mouseEvent.clientX + 'px';
+            pasteToolbar.style.top = mouseEvent.clientY + 'px';
+        });
+    }
+
+    get pasteContainer() {
+        return this.firstChild;
+    }
+}
+window.customElements.define('paste-wrapper', PasteWrapper);
+
 document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'Enter': {
             if (document.cropMode) {
                 // TODO: Broken for crop from top and left.
+                document.pasteWrapper.style.position = 'absolute';
                 let pasteOverlay = document.querySelector('paste-overlay');
-                document.pasteContainer.style.position = 'absolute';
-                document.pasteContainer.style.left = pasteOverlay.offsetLeft + 'px';
-                document.pasteContainer.style.top = pasteOverlay.offsetTop + 'px';
-                document.pasteContainer.style.width = pasteOverlay.offsetWidth + 'px';
-                document.pasteContainer.style.height = pasteOverlay.offsetHeight + 'px';
+                document.pasteWrapper.style.left = pasteOverlay.offsetLeft + 'px';
+                document.pasteWrapper.style.top = pasteOverlay.offsetTop + 'px';
+                document.pasteWrapper.style.width = pasteOverlay.offsetWidth + 'px';
+                document.pasteWrapper.style.height = pasteOverlay.offsetHeight + 'px';
             }
             // fallthrough
         }
@@ -246,60 +267,45 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-function pasteCallback(pasteEvent) {
+let header = document.createElement('h3');
+header.append('Paste from Smart Copy into container below:');
+let ceContainer = document.createElement('div');
+ceContainer.setAttribute('id', 'ceContainer');
+ceContainer.setAttribute('contenteditable', 'true');
+ceContainer.addEventListener('paste', (pasteEvent) => {
     pasteEvent.preventDefault();
     let selection = window.getSelection();
     let range = selection.getRangeAt(0);
     range.deleteContents();
-    document.pasteContainer = getPasteHTML();
-    range.insertNode(document.pasteContainer);
+    document.pasteWrapper = new PasteWrapper(getPasteHTML());
+    range.insertNode(document.pasteWrapper);
     range.collapse();
     selection.removeAllRanges();
     selection.addRange(range);
 
-    let pasteOverlay = new PasteOverlay(document.pasteContainer.offsetLeft, document.pasteContainer.offsetTop,
-        document.pasteContainer.offsetWidth, document.pasteContainer.offsetHeight);
+    let pasteOverlay = new PasteOverlay(document.pasteWrapper.offsetLeft, document.pasteWrapper.offsetTop,
+        document.pasteWrapper.offsetWidth, document.pasteWrapper.offsetHeight);
     document.body.append(pasteOverlay);
-    document.pasteContainer.addEventListener('mouseenter', (mouseEvent) => {
-        let pasteToolbar = document.querySelector('paste-toolbar');
-        pasteToolbar.classList.remove('hidden');
-        pasteToolbar.style.left = mouseEvent.clientX + 'px';
-        pasteToolbar.style.top = mouseEvent.clientY + 'px';
-    });
 
-    document.pasteContainer.addEventListener('mouseleave', () => {
-        let pasteToolbar = document.querySelector('paste-toolbar');
-        pasteToolbar.classList.add('hidden');
-    });
+    document.addEventListener('mousedown', (mouseEvent) => document.querySelector('paste-overlay').updateDragAnchor(mouseEvent.clientX, mouseEvent.clientY));
 
-    document.addEventListener('mousedown', (mouseEvent) => {
-        let pasteOverlay = document.querySelector('paste-overlay');
-        pasteOverlay.updateDragAnchor(mouseEvent.clientX, mouseEvent.clientY);
-    });
     document.addEventListener('mousemove', (mouseEvent) => {
         let pasteOverlay = document.querySelector('paste-overlay');
         pasteOverlay.adjustForDrag(mouseEvent.clientX, mouseEvent.clientY);
         if (document.resizeMode) {
             // TODO: Broken for resize from top and left.
             if (pasteOverlay.dragAnchor != DRAG_ANCHOR.NONE) {
-                let xScaleFactor = pasteOverlay.offsetWidth / document.pasteContainer.offsetWidth;
-                let yScaleFactor = pasteOverlay.offsetHeight / document.pasteContainer.offsetHeight;
-                document.pasteContainer.style.transformOrigin = 'top left';
-                document.pasteContainer.style.transform = 'scale(' + xScaleFactor + ',' + yScaleFactor + ')';
+                let xScaleFactor = pasteOverlay.offsetWidth / document.pasteWrapper.offsetWidth;
+                let yScaleFactor = pasteOverlay.offsetHeight / document.pasteWrapper.offsetHeight;
+                document.pasteWrapper.style.transformOrigin = 'top left';
+                document.pasteWrapper.style.transform = 'scale(' + xScaleFactor + ',' + yScaleFactor + ')';
             }
         }
     });
-    document.addEventListener('mouseup', () => {
-        document.querySelector('paste-overlay').resetDragAnchor();
-    });
-}
 
-let header = document.createElement('h3');
-header.append('Paste from Smart Copy into container below:');
-let ceContainer = document.createElement('div');
-ceContainer.setAttribute('id', 'ceContainer');
-ceContainer.setAttribute('contenteditable', 'true');
-ceContainer.addEventListener('paste', pasteCallback);
+    document.addEventListener('mouseup', () => document.querySelector('paste-overlay').resetDragAnchor());
+});
+
 let pasteToolbar = new PasteToolbar();
 let bodyOverlay = new BodyOverlay();
 document.body.append(header, ceContainer, pasteToolbar, bodyOverlay);

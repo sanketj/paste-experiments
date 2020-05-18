@@ -12,6 +12,13 @@ body-overlay.hidden {
     display: none;
 }
 
+#ceContainer {
+    border: 1px solid black;
+    min-height: 200px;
+    overflow: auto;
+    padding: 10px;
+}
+
 paste-toolbar {
     display: flex;
     position: absolute;
@@ -38,9 +45,6 @@ paste-overlay.hidden {
     display: none;
 }
 
-#ceContainer {
-    border: 1px solid black;
-    min-height: 200px;
-    overflow: auto;
-    padding: 10px;
+paste-wrapper {
+    display: block;
 }
