@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
     <head>
+        <link rel='stylesheet' type='text/css' href='paste-template.css'>
         <style>
             video {
                 position: absolute;
@@ -55,7 +56,7 @@
             together, and mutually supplying, in the government of their vast inheritance, such elements as are wanting
             in the character of each.</div>
             <video controls><source src='foo.mp4' type='video/mp4'></video>
-            <div id='l'>The above words, written by one of the greatest philosophers of olden time, have often impressed
+            <div id='l'>AREA SELECT FROM HERE... The above words, written by one of the greatest philosophers of olden time, have often impressed
             me, and I have frequently quoted them when asked why I did not write an account of the interesting travels
             and adventures I have had in my life. It has therefore required a great deal of courage to take up my
             pen and record a few recollections of South Africa. I felt that, were they ever to be written at all,
@@ -72,7 +73,7 @@
             the country is still young, the fair prospect opens out of Briton and Boer living in amity and peace
             together, and mutually supplying, in the government of their vast inheritance, such elements as are wanting
             in the character of each.</div>
-            <div id='r'>The above words, written by one of the greatest philosophers of olden time, have often impressed
+            <div id='r'> AREA SELECT THIS TOO... The above words, written by one of the greatest philosophers of olden time, have often impressed
             me, and I have frequently quoted them when asked why I did not write an account of the interesting travels
             and adventures I have had in my life. It has therefore required a great deal of courage to take up my
             pen and record a few recollections of South Africa. I felt that, were they ever to be written at all,
@@ -94,5 +95,50 @@
         <br/>
         <br/>
         <br/>
+        
+        <script>
+            function getPasteHTML() {
+                let div = document.createElement('div');
+                div.innerHTML = `<div id ="container" style="contain:strict; width:981px; height: 518px;">
+            <div style="display:grid;grid-template-columns: 504px;">
+            <div style="grid-row:1; grid-column:1; height:518px;width:477px;"><div style="float:right;width:150px;height:150px;"></div>AREA SELECT FROM HERE... The above words, written by one of the greatest philosophers of olden time, have often impressed
+            me, and I have frequently quoted them when asked why I did not write an account of the interesting travels
+            and adventures I have had in my life. It has therefore required a great deal of courage to take up my
+            pen and record a few recollections of South Africa. I felt that, were they ever to be written at all,
+            it must be before the rapidly passing years diminish the interest in that land, which in the past has
+            been the object of such engrossing attention; and that at the present time, when the impending Federation
+            of South Africa has at length crowned the hopes of those patriots who have laboured patiently and hopefully
+            to bring about this great result, it might be appropriate to recall those days when Englishmen, who had
+            made South Africa their home, had much to contend with, even before the fierce struggle to keep "the flag
+            flying" in the years of 1899-1902. During that period, which commenced after the disaster at Majuba Hill,
+            "equal rights" were a golden dream which only the most optimistic ever hoped to see realized. From then onwards,
+            as old colonists have so often told me, the Boers brought up the younger generation in the belief that the
+            "Roinek" was a coward, and in consequence their arrogance in the country districts became wellnigh intolerable,
+            while at the Cape the Bond party grew so strong it bid fair to elbow out the English altogether. Now, while
+            the country is still young, the fair prospect opens out of Briton and Boer living in amity and peace
+            together, and mutually supplying, in the government of their vast inheritance, such elements as are wanting
+            in the character of each.</div>
+            <div style="grid-row:1; grid-column:2; height:518px;width:477px;"><div style="float:left;width:150px;height:150px;"></div> AREA SELECT THIS TOO... The above words, written by one of the greatest philosophers of olden time, have often impressed
+            me, and I have frequently quoted them when asked why I did not write an account of the interesting travels
+            and adventures I have had in my life. It has therefore required a great deal of courage to take up my
+            pen and record a few recollections of South Africa. I felt that, were they ever to be written at all,
+            it must be before the rapidly passing years diminish the interest in that land, which in the past has
+            been the object of such engrossing attention; and that at the present time, when the impending Federation
+            of South Africa has at length crowned the hopes of those patriots who have laboured patiently and hopefully
+            to bring about this great result, it might be appropriate to recall those days when Englishmen, who had
+            made South Africa their home, had much to contend with, even before the fierce struggle to keep "the flag
+            flying" in the years of 1899-1902. During that period, which commenced after the disaster at Majuba Hill,
+            "equal rights" were a golden dream which only the most optimistic ever hoped to see realized. From then onwards,
+            as old colonists have so often told me, the Boers brought up the younger generation in the belief that the
+            "Roinek" was a coward, and in consequence their arrogance in the country districts became wellnigh intolerable,
+            while at the Cape the Bond party grew so strong it bid fair to elbow out the English altogether. Now, while
+            the country is still young, the fair prospect opens out of Briton and Boer living in amity and peace
+            together, and mutually supplying, in the government of their vast inheritance, such elements as are wanting
+            in the character of each.</div>
+        </div>`
+                return div.firstChild;
+            }
+        </script>
+        <script src='paste-template.js'></script>
     </body>
 </html>
